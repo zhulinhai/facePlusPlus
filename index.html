@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Face Plus Plus API测试</title>
+</head>
+<body>
+    <form enctype="multipart/form-data" method="post">
+        <input type="text" name="api_key" value="YHyOFY7mRym--NR9ATiCAV3RVJLHu7id" hidden>
+        <input type="text" name="api_secret" value="eu2J__uxCyp43LK3h6rLRNS2wy7QurFh" hidden>
+        <input type="text" name="image_url" value="http://ovpa62sqw.bkt.clouddn.com/%E4%B8%AA%E4%BA%BA%E8%AE%A4%E8%AF%81-%E5%8F%8D%E9%9D%A2.jpg">
+        <input id="btnSubmit" type="button" value="提交">
+    </form>
+
+    <script type="text/javascript" src="jquery-1.10.1.min.js"></script>
+    <script type="text/javascript">
+        $('#btnSubmit').click(function () {
+            var params = $('form').serializeArray();
+            console.log(params);
+            $.ajax({
+                url: 'https://api-cn.faceplusplus.com/humanbodypp/beta/segment',
+                data: params,
+                cache: false,
+                contentType: 'multipart/form-data',
+                processData: false,
+                type: 'POST',
+                success: function(data){
+                    alert(data);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

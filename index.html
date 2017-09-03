@@ -8,30 +8,97 @@
     <title>Face Plus Plus API测试</title>
 </head>
 <body>
-    <form enctype="multipart/form-data" method="post">
+    <p>原始图片：</p>
+    <img id="srcImg" src="facetest.jpg"><br>
+
+    <p>灰度图：</p>
+    <label>获取灰度图：</label>
+    <form method="post">
         <input type="text" name="api_key" value="YHyOFY7mRym--NR9ATiCAV3RVJLHu7id" hidden>
         <input type="text" name="api_secret" value="eu2J__uxCyp43LK3h6rLRNS2wy7QurFh" hidden>
-        <input type="text" name="image_url" value="http://ovpa62sqw.bkt.clouddn.com/%E4%B8%AA%E4%BA%BA%E8%AE%A4%E8%AF%81-%E5%8F%8D%E9%9D%A2.jpg">
+        <input type="text" name="image_url" value="http://ovpa62sqw.bkt.clouddn.com/facetest.jpg">
         <input id="btnSubmit" type="button" value="提交">
-    </form>
+    </form><br>
+    <img id="resultImg"><br>
+    <p>合成图片：</p>
+    <div class="resultDiv" style="width: 1000px;height: 1000px;background: url('./timg1.jpg') no-repeat;background-size: cover;">
+        <img id="addedImg" >
+    </div>
+    <br>
+    <canvas id="myCanvas" width="1000" height="1000">Gray Filter</canvas>
 
     <script type="text/javascript" src="jquery-1.10.1.min.js"></script>
     <script type="text/javascript">
         $('#btnSubmit').click(function () {
             var params = $('form').serializeArray();
-            console.log(params);
             $.ajax({
                 url: 'https://api-cn.faceplusplus.com/humanbodypp/beta/segment',
-                data: params,
-                cache: false,
-                contentType: 'multipart/form-data',
-                processData: false,
                 type: 'POST',
+                data: params,
+                dataType: 'json',
                 success: function(data){
-                    alert(data);
+                    console.log(data);
+                    var grayImg =  'data:image/jpeg;base64,'+data.result;
+                    $('#resultImg').attr('src', grayImg);
+                    $('#addedImg').attr('src', clipImgWithGrayImg( grayImg));
+                },
+                error: function (msg) {
+                    console.log(msg);
                 }
             });
         });
+
+        <!-- 已知灰度图裁切原始图片 -->
+        function clipImgWithGrayImg(grayImg) {
+            var canvas = document.getElementById("myCanvas");
+            var image = document.getElementById("resultImg");
+            image.crossOrigin="Anonymous";
+
+            <!-- 将得到的图像绘制在Canvas对象中的代码如下：-->
+            canvas.width=image.width;
+            canvas.height=image.height;
+            var ctx=canvas.getContext("2d");
+            ctx.drawImage(image, 0, 0);
+            <!-- 从Canvas对象中获取图像像素数据的代码如下：-->
+
+            var canvasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            <!-- 读取像素值与实现灰度计算的代码如下：-->
+
+            for ( var x = 0; x < canvasData.width; x++) {
+              for ( var y = 0; y < canvasData.height; y++) {
+
+                  // Index of the pixel in the array
+                  var idx = (x + y * canvasData.width) * 4;
+                  var r = canvasData.data[idx + 0];
+                  var g = canvasData.data[idx + 1];
+                  var b = canvasData.data[idx + 2];
+
+                  if (r < 30 || g < 30 || b < 30) {
+                      canvasData.data[idx + 3] = 0; // Alpha channel
+                  }
+              }
+            }
+
+            var data = canvasData.data;
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            var srcImage = document.getElementById("srcImg");
+            ctx.drawImage(srcImage, 0, 0);
+            srcImage.crossOrigin="Anonymous";
+
+            <!-- 从Canvas对象中获取图像像素数据的代码如下：-->
+            var canvasData2 = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            for ( var j = 0; j < canvasData2.width; j++) {
+                for ( var k = 0; k < canvasData2.height; k++) {
+                    // Index of the pixel in the array
+                    var idx = (j + k * canvasData2.width) * 4;
+                    canvasData2.data[idx + 3] = data[idx + 3];
+                }
+            }
+
+            ctx.putImageData(canvasData2,0,0);
+            return canvas.toDataURL();
+        }
     </script>
 </body>
 </html>

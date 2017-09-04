@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Face Plus Plus人脸检测</title>
+</head>
+<body>
+    <p>检测图片：</p>
+    <img id="srcImg" src="facetest2.jpg" /><br>
+    <form method="post">
+        <input type="text" name="api_key" value="YHyOFY7mRym--NR9ATiCAV3RVJLHu7id" hidden>
+        <input type="text" name="api_secret" value="eu2J__uxCyp43LK3h6rLRNS2wy7QurFh" hidden>
+        <input type="text" name="return_landmark" value="1" hidden>
+        <label>网络地址：<input type="text" name="image_url" value="http://ovpa62sqw.bkt.clouddn.com/facetest2.jpg"></label>
+        <input id="btnSubmit" type="button" value="提交">
+    </form><br>
+    <p>检测结果：</p>
+    <canvas id="myCanvas"></canvas>
+    <p>裁剪结果：</p>
+    <canvas id="cropCanvas"></canvas>
+
+    <script type="text/javascript" src="jquery-1.10.1.min.js"></script>
+    <script type="text/javascript">
+        /* 人脸检测 */
+        $('#btnSubmit').click(function () {
+            var params = $('form').serializeArray();
+            $.ajax({
+                url: 'https://api-cn.faceplusplus.com/facepp/v3/detect', // 人脸检测API
+                type: 'POST',
+                data: params,
+                dataType: 'json',
+                crossDomain: true,
+                success: function(data){
+                    console.log(data);
+                    if (data.faces.length > 0) {
+                        drawFace(data.faces[0].face_rectangle, data.faces[0].landmark);
+                    }
+                },
+                error: function (msg) {
+                    console.log(msg);
+                }
+            });
+        });
+
+        <!-- 显示面部区域draw face -->
+        function drawFace(rect, landmark) {
+            var canvas = document.getElementById("myCanvas");
+            var image = document.getElementById("srcImg");
+            image.crossOrigin="Anonymous";
+            var points = [
+                {'x': landmark.contour_left1.x, 'y':landmark.contour_left1.y},
+                {'x': landmark.contour_left2.x, 'y':landmark.contour_left2.y},
+                {'x': landmark.contour_left3.x, 'y':landmark.contour_left3.y},
+                {'x': landmark.contour_left4.x, 'y':landmark.contour_left4.y},
+                {'x': landmark.contour_left5.x, 'y':landmark.contour_left5.y},
+                {'x': landmark.contour_left6.x, 'y':landmark.contour_left6.y},
+                {'x': landmark.contour_left7.x, 'y':landmark.contour_left7.y},
+                {'x': landmark.contour_left8.x, 'y':landmark.contour_left8.y},
+                {'x': landmark.contour_left9.x, 'y':landmark.contour_left9.y},
+                {'x': landmark.contour_chin.x, 'y':landmark.contour_chin.y},
+                {'x': landmark.contour_right9.x, 'y':landmark.contour_right9.y},
+                {'x': landmark.contour_right8.x, 'y':landmark.contour_right8.y},
+                {'x': landmark.contour_right7.x, 'y':landmark.contour_right7.y},
+                {'x': landmark.contour_right6.x, 'y':landmark.contour_right6.y},
+                {'x': landmark.contour_right5.x, 'y':landmark.contour_right5.y},
+                {'x': landmark.contour_right4.x, 'y':landmark.contour_right4.y},
+                {'x': landmark.contour_right3.x, 'y':landmark.contour_right3.y},
+                {'x': landmark.contour_right2.x, 'y':landmark.contour_right2.y},
+                {'x': landmark.contour_right1.x, 'y':landmark.contour_right1.y},
+                {'x': landmark.right_eyebrow_right_corner.x, 'y':landmark.right_eyebrow_right_corner.y},
+                {'x': landmark.right_eyebrow_upper_middle.x, 'y':landmark.right_eyebrow_upper_middle.y},
+                {'x': landmark.left_eyebrow_upper_middle.x, 'y':landmark.left_eyebrow_upper_middle.y},
+                {'x': landmark.left_eyebrow_left_corner.x, 'y':landmark.left_eyebrow_left_corner.y}
+            ];
+
+            <!-- 将得到的图像绘制在Canvas对象中的代码如下：-->
+            canvas.width=image.width;
+            canvas.height=image.height;
+            var ctx=canvas.getContext("2d");
+            ctx.drawImage(image, 0, 0);
+            ctx.beginPath();
+            ctx.rect(rect.top, rect.left, rect.width, rect.height);
+            $.each(points, function (index, item) {
+                if (index === 0) {
+                    ctx.moveTo(item.x, item.y);
+                } else {
+                    ctx.lineTo(item.x, item.y);
+                }
+            });
+            ctx.closePath();
+            ctx.strokeStyle = "green";
+            ctx.stroke();
+        }
+
+        <!-- 获取面部图片 -->
+        function getFaceImg() {
+
+        }
+
+        <!-- 已知灰度图裁切原始图片 -->
+        function clipImgWithGrayImg(grayImg) {
+            var canvas = document.getElementById("myCanvas");
+            var image = document.getElementById("resultImg");
+            image.crossOrigin="Anonymous";
+
+            <!-- 将得到的图像绘制在Canvas对象中的代码如下：-->
+            canvas.width=image.width;
+            canvas.height=image.height;
+            var ctx=canvas.getContext("2d");
+            ctx.drawImage(image, 0, 0);
+            <!-- 从Canvas对象中获取图像像素数据的代码如下：-->
+
+            var canvasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            <!-- 读取像素值与实现灰度计算的代码如下：-->
+
+            for ( var x = 0; x < canvasData.width; x++) {
+                for ( var y = 0; y < canvasData.height; y++) {
+
+                    // Index of the pixel in the array
+                    var idx = (x + y * canvasData.width) * 4;
+                    var r = canvasData.data[idx + 0];
+                    var g = canvasData.data[idx + 1];
+                    var b = canvasData.data[idx + 2];
+
+                    if (r < 30 || g < 30 || b < 30) {
+                        canvasData.data[idx + 3] = 0; // Alpha channel
+                    }
+                }
+            }
+
+            var data = canvasData.data;
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            var srcImage = document.getElementById("srcImg");
+            ctx.drawImage(srcImage, 0, 0);
+            srcImage.crossOrigin="Anonymous";
+
+            <!-- 从Canvas对象中获取图像像素数据的代码如下：-->
+            var canvasData2 = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            for ( var j = 0; j < canvasData2.width; j++) {
+                for ( var k = 0; k < canvasData2.height; k++) {
+                    // Index of the pixel in the array
+                    var idx = (j + k * canvasData2.width) * 4;
+                    canvasData2.data[idx + 3] = data[idx + 3];
+                }
+            }
+
+            ctx.putImageData(canvasData2,0,0);
+            return canvas.toDataURL();
+        }
+    </script>
+</body>
+</html>
